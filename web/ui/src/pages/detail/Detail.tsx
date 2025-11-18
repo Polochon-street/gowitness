@@ -15,6 +15,7 @@ import { copyToClipboard, getIconUrl, getStatusColor } from '@/lib/common';
 import * as api from "@/lib/api/api";
 import * as apitypes from "@/lib/api/types";
 import { getData } from './data';
+import { FavoriteToggle } from '@/components/favorite-toggle';
 
 
 const ScreenshotDetailPage = () => {
@@ -118,6 +119,10 @@ const ScreenshotDetailPage = () => {
           </Link>
         </div>
         <div className="flex space-x-2">
+          <FavoriteToggle
+            resultId={detail.id}
+            tags={detail.tags || []}
+          />
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>

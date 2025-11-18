@@ -20,6 +20,7 @@ import { getData, getWappalyzerData } from "./data";
 import { getIconUrl, getStatusColor } from "@/lib/common";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { FavoriteToggle } from "@/components/favorite-toggle";
 
 
 const GalleryPage = () => {
@@ -185,6 +186,13 @@ const GalleryPage = () => {
                 className="w-full h-48 object-cover transition-all duration-300 filter group-hover:scale-105"
               />
             )}
+            <div className="absolute top-2 left-2">
+              <FavoriteToggle
+                resultId={screenshot.id}
+                tags={screenshot.tags || []}
+                className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
+              />
+            </div>
             <div className="absolute top-2 right-2">
               <Badge variant="default" className={`${getStatusColor(screenshot.response_code)}`}>
                 {screenshot.response_code}

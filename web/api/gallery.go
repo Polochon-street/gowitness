@@ -28,6 +28,7 @@ type galleryContent struct {
 	Screenshot   string    `json:"screenshot"`
 	Failed       bool      `json:"failed"`
 	Technologies []string  `json:"technologies"`
+	Tags         []models.Tag `json:"tags"`
 }
 
 // GalleryHandler gets a paginated gallery
@@ -101,7 +102,7 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 	// query the db
 	var queryResults []*models.Result
 	query := h.DB.Model(&models.Result{}).Limit(results.Limit).
-		Offset(offset).Preload("Technologies")
+		Offset(offset).Preload("Technologies").Preload("Tags")
 
 	if perceptionSort {
 		query.Order("perception_hash_group_id DESC")
@@ -145,6 +146,7 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 			Screenshot:   result.Screenshot,
 			Failed:       result.Failed,
 			Technologies: technologies,
+			Tags:         result.Tags,
 		})
 	}
 

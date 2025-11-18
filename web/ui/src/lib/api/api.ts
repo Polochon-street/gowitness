@@ -58,6 +58,14 @@ const endpoints = {
   submitsingle: {
     path: `/submit/single`,
     returnas: {} as detail
+  },
+  tagadd: {
+    path: `/results/tag/add`,
+    returnas: "" as string
+  },
+  tagremove: {
+    path: `/results/tag/remove`,
+    returnas: "" as string
   }
 };
 
