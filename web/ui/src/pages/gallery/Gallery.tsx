@@ -343,7 +343,7 @@ const GalleryPage = () => {
           </Popover>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[200px] justify-start">
+              <Button variant="outline" className="w-[150px] justify-start">
                 <FilterIcon className="mr-2 h-4 w-4" />
                 {tagFilter.split(',').filter(n => n).length > 0 ? (
                   <>
@@ -354,7 +354,7 @@ const GalleryPage = () => {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0">
+            <PopoverContent className="w-[150px] p-0">
               <Command>
                 <CommandInput placeholder="Search tags..." />
                 <CommandList>
