@@ -44,6 +44,7 @@ type Result struct {
 	Network []NetworkLog `json:"network" gorm:"constraint:OnDelete:CASCADE"`
 	Console []ConsoleLog `json:"console" gorm:"constraint:OnDelete:CASCADE"`
 	Cookies []Cookie     `json:"cookies" gorm:"constraint:OnDelete:CASCADE"`
+	Tags    []Tag        `json:"tags" gorm:"many2many:result_tags;"`
 }
 
 func (r *Result) HeaderMap() map[string][]string {
@@ -132,4 +133,19 @@ type Cookie struct {
 	Priority     string    `json:"priority"`
 	SourceScheme string    `json:"source_scheme"`
 	SourcePort   int64     `json:"source_port"`
+}
+
+// Tag represents a label that can be applied to URLs
+type Tag struct {
+	ID   uint   `json:"id" gorm:"primarykey"`
+	Name string `json:"name" gorm:"unique;index"`
+}
+
+// ResultTag is the join table for the many-to-many relationship between Results and Tags
+// The composite primary key (ResultID, TagID) ensures a URL can't have the same tag twice
+type ResultTag struct {
+	ResultID uint   `json:"result_id" gorm:"primaryKey"`
+	TagID    uint   `json:"tag_id" gorm:"primaryKey"`
+	Result   Result `gorm:"constraint:OnDelete:CASCADE"`
+	Tag      Tag    `gorm:"constraint:OnDelete:CASCADE"`
 }
