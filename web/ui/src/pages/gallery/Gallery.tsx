@@ -27,6 +27,7 @@ const GalleryPage = () => {
   const [gallery, setGallery] = useState<apitypes.galleryResult[]>();
   const [wappalyzer, setWappalyzer] = useState<apitypes.wappalyzer>();
   const [technology, setTechnology] = useState<apitypes.technologylist>();
+  const [tagList, setTagList] = useState<apitypes.taglist>();
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -36,21 +37,22 @@ const GalleryPage = () => {
   const limit = parseInt(searchParams.get("limit") || "24");
   //filters
   const technologyFilter = searchParams.get("technologies") || "";
+  const tagFilter = searchParams.get("tags") || "";
   const statusFilter = searchParams.get("status") || "";
   // toggles
   const perceptionGroup = searchParams.get("perception") === "true";
   const showFailed = searchParams.get("failed") !== "false"; // Default to true
 
   useEffect(() => {
-    getWappalyzerData(setWappalyzer, setTechnology);
+    getWappalyzerData(setWappalyzer, setTechnology, setTagList);
   }, []);
 
   useEffect(() => {
     getData(
       setLoading, setGallery, setTotalPages,
-      page, limit, technologyFilter, statusFilter, perceptionGroup, showFailed
+      page, limit, technologyFilter, tagFilter, statusFilter, perceptionGroup, showFailed
     );
-  }, [page, limit, perceptionGroup, statusFilter, technologyFilter, showFailed]);
+  }, [page, limit, perceptionGroup, statusFilter, technologyFilter, tagFilter, showFailed]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -102,6 +104,24 @@ const GalleryPage = () => {
     handlePageChange(1); // back to page 1
   };
 
+  const handleTagChange = (tag: string) => {
+    const field = "tags";
+    setSearchParams(prev => {
+      const currentTags = prev.get(field)?.split(",").filter(Boolean) || [];
+
+      if (currentTags.includes(tag)) {
+        const updatedTags = currentTags.filter(t => t !== tag);
+        prev.set(field, updatedTags.join(","));
+      } else {
+        currentTags.push(tag);
+        prev.set(field, currentTags.join(","));
+      }
+
+      return prev;
+    });
+    handlePageChange(1); // back to page 1
+  };
+
   const handleStatusFilter = (status: string) => {
     setSearchParams(prev => {
       const currentStatus = prev.get("status")?.split(",").filter(Boolean) || [];
@@ -140,6 +160,15 @@ const GalleryPage = () => {
       ...technology.technologies.filter(tech => !selectedTechnologies.includes(tech))
     ];
   }, [technology, technologyFilter]);
+
+  const sortedTags = useMemo(() => {
+    if (!tagList) return [];
+    const selectedTags = tagFilter.split(',').filter(Boolean);
+    return [
+      ...selectedTags,
+      ...tagList.tags.filter(tag => !selectedTags.includes(tag))
+    ];
+  }, [tagList, tagFilter]);
 
   const renderPageButtons = (visible: number) => {
     const pageButtons = [];
@@ -305,6 +334,44 @@ const GalleryPage = () => {
                           )}
                         />
                         {tech}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[200px] justify-start">
+                <FilterIcon className="mr-2 h-4 w-4" />
+                {tagFilter.split(',').filter(n => n).length > 0 ? (
+                  <>
+                    {tagFilter.split(',').length} selected
+                  </>
+                ) : (
+                  "Filter by Tag"
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0">
+              <Command>
+                <CommandInput placeholder="Search tags..." />
+                <CommandList>
+                  <CommandEmpty>No tag found.</CommandEmpty>
+                  <CommandGroup>
+                    {sortedTags.map((tag) => (
+                      <CommandItem
+                        key={tag}
+                        onSelect={() => handleTagChange(tag)}
+                      >
+                        <CheckIcon
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            tagFilter.includes(tag) ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {tag}
                       </CommandItem>
                     ))}
                   </CommandGroup>

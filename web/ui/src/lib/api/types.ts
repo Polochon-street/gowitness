@@ -172,6 +172,10 @@ interface technologylist {
   technologies: string[];
 }
 
+interface taglist {
+  tags: string[];
+}
+
 export type {
   statistics,
   wappalyzer,
@@ -189,4 +193,5 @@ export type {
   detail,
   searchresult,
   technologylist,
+  taglist,
 };
