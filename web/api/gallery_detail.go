@@ -26,6 +26,7 @@ func (h *ApiHandler) DetailHandler(w http.ResponseWriter, r *http.Request) {
 	if err := h.DB.Model(&models.Result{}).
 		Preload(clause.Associations).
 		Preload("TLS.SanList").
+		Preload("Tags").
 		First(&response, chi.URLParam(r, "id")).Error; err != nil {
 
 		log.Error("could not get detail for id", "err", err)
