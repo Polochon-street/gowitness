@@ -1,4 +1,11 @@
 definitions:
+  api.addTagRequest:
+    properties:
+      result_id:
+        type: integer
+      tag_name:
+        type: string
+    type: object
   api.deleteResultRequest:
     properties:
       id:
@@ -18,6 +25,10 @@ definitions:
         type: integer
       screenshot:
         type: string
+      tags:
+        items:
+          $ref: '#/definitions/models.Tag'
+        type: array
       technologies:
         items:
           type: string
@@ -62,6 +73,13 @@ definitions:
       title:
         type: string
       url:
+        type: string
+    type: object
+  api.removeTagRequest:
+    properties:
+      result_id:
+        type: integer
+      tag_name:
         type: string
     type: object
   api.searchRequest:
@@ -154,6 +172,13 @@ definitions:
         $ref: '#/definitions/api.submitRequestOptions'
       url:
         type: string
+    type: object
+  api.tagListResponse:
+    properties:
+      tags:
+        items:
+          type: string
+        type: array
     type: object
   api.technologyListResponse:
     properties:
@@ -298,6 +323,10 @@ definitions:
         type: string
       screenshot:
         type: string
+      tags:
+        items:
+          $ref: '#/definitions/models.Tag'
+        type: array
       technologies:
         items:
           $ref: '#/definitions/models.Technology'
@@ -345,6 +374,13 @@ definitions:
       tls_id:
         type: integer
       value:
+        type: string
+    type: object
+  models.Tag:
+    properties:
+      id:
+        type: integer
+      name:
         type: string
     type: object
   models.Technology:
@@ -436,6 +472,10 @@ paths:
         in: query
         name: technologies
         type: string
+      - description: A comma seperated list of tags to filter by.
+        in: query
+        name: tags
+        type: string
       - description: A comma seperated list of HTTP status codes to filter by.
         in: query
         name: status
@@ -473,6 +513,66 @@ paths:
       summary: Results list
       tags:
       - Results
+  /results/tag/add:
+    post:
+      consumes:
+      - application/json
+      description: Associates a tag with a URL result. Creates the tag if it doesn't
+        exist.
+      parameters:
+      - description: The result ID and tag name
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/api.addTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+      summary: Add a tag to a result
+      tags:
+      - Tags
+  /results/tag/remove:
+    post:
+      consumes:
+      - application/json
+      description: Removes the association between a tag and a URL result.
+      parameters:
+      - description: The result ID and tag name
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/api.removeTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+      summary: Remove a tag from a result
+      tags:
+      - Tags
+  /results/tags:
+    get:
+      consumes:
+      - application/json
+      description: Get all unique tags that have been applied to URLs.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.tagListResponse'
+      summary: Get all tags
+      tags:
+      - Tags
   /results/technology:
     get:
       consumes:

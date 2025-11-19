@@ -19,15 +19,16 @@ type galleryResponse struct {
 }
 
 type galleryContent struct {
-	ID           uint      `json:"id"`
-	ProbedAt     time.Time `json:"probed_at"`
-	URL          string    `json:"url"`
-	ResponseCode int       `json:"response_code"`
-	Title        string    `json:"title"`
-	Filename     string    `json:"file_name"`
-	Screenshot   string    `json:"screenshot"`
-	Failed       bool      `json:"failed"`
-	Technologies []string  `json:"technologies"`
+	ID           uint         `json:"id"`
+	ProbedAt     time.Time    `json:"probed_at"`
+	URL          string       `json:"url"`
+	ResponseCode int          `json:"response_code"`
+	Title        string       `json:"title"`
+	Filename     string       `json:"file_name"`
+	Screenshot   string       `json:"screenshot"`
+	Failed       bool         `json:"failed"`
+	Technologies []string     `json:"technologies"`
+	Tags         []models.Tag `json:"tags"`
 }
 
 // GalleryHandler gets a paginated gallery
@@ -40,6 +41,7 @@ type galleryContent struct {
 //	@Param			page			query		int		false	"The page to load."
 //	@Param			limit			query		int		false	"Number of results per page."
 //	@Param			technologies	query		string	false	"A comma seperated list of technologies to filter by."
+//	@Param			tags			query		string	false	"A comma seperated list of tags to filter by."
 //	@Param			status			query		string	false	"A comma seperated list of HTTP status codes to filter by."
 //	@Param			perception		query		boolean	false	"Order the results by perception hash."
 //	@Param			failed			query		boolean	false	"Include failed screenshots in the results."
@@ -91,6 +93,13 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 		technologies = append(technologies, strings.Split(technologyFilterValue, ",")...)
 	}
 
+	// tag filtering
+	var tags []string
+	tagFilterValue := r.URL.Query().Get("tags")
+	if tagFilterValue != "" {
+		tags = append(tags, strings.Split(tagFilterValue, ",")...)
+	}
+
 	// failed result filtering
 	var showFailed bool
 	showFailed, err = strconv.ParseBool(r.URL.Query().Get("failed"))
@@ -101,7 +110,7 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 	// query the db
 	var queryResults []*models.Result
 	query := h.DB.Model(&models.Result{}).Limit(results.Limit).
-		Offset(offset).Preload("Technologies")
+		Offset(offset).Preload("Technologies").Preload("Tags")
 
 	if perceptionSort {
 		query.Order("perception_hash_group_id DESC")
@@ -115,6 +124,13 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 		query.Where("id in (?)", h.DB.Model(&models.Technology{}).
 			Select("result_id").Distinct("result_id").
 			Where("value IN (?)", technologies))
+	}
+
+	if len(tags) > 0 {
+		query.Where("id in (?)", h.DB.Table("result_tags").
+			Select("result_id").Distinct("result_id").
+			Joins("JOIN tags ON tags.id = result_tags.tag_id").
+			Where("tags.name IN (?)", tags))
 	}
 
 	if !showFailed {
@@ -145,6 +161,7 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 			Screenshot:   result.Screenshot,
 			Failed:       result.Failed,
 			Technologies: technologies,
+			Tags:         result.Tags,
 		})
 	}
 

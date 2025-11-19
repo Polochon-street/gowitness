@@ -138,6 +138,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "A comma seperated list of tags to filter by.",
+                        "name": "tags",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "A comma seperated list of HTTP status codes to filter by.",
                         "name": "status",
                         "in": "query"
@@ -183,6 +189,97 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.listResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/results/tag/add": {
+            "post": {
+                "description": "Associates a tag with a URL result. Creates the tag if it doesn't exist.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tags"
+                ],
+                "summary": "Add a tag to a result",
+                "parameters": [
+                    {
+                        "description": "The result ID and tag name",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.addTagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/results/tag/remove": {
+            "post": {
+                "description": "Removes the association between a tag and a URL result.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tags"
+                ],
+                "summary": "Remove a tag from a result",
+                "parameters": [
+                    {
+                        "description": "The result ID and tag name",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.removeTagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/results/tags": {
+            "get": {
+                "description": "Get all unique tags that have been applied to URLs.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tags"
+                ],
+                "summary": "Get all tags",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.tagListResponse"
                         }
                     }
                 }
@@ -364,6 +461,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "api.addTagRequest": {
+            "type": "object",
+            "properties": {
+                "result_id": {
+                    "type": "integer"
+                },
+                "tag_name": {
+                    "type": "string"
+                }
+            }
+        },
         "api.deleteResultRequest": {
             "type": "object",
             "properties": {
@@ -392,6 +500,12 @@ const docTemplate = `{
                 },
                 "screenshot": {
                     "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Tag"
+                    }
                 },
                 "technologies": {
                     "type": "array",
@@ -459,6 +573,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.removeTagRequest": {
+            "type": "object",
+            "properties": {
+                "result_id": {
+                    "type": "integer"
+                },
+                "tag_name": {
                     "type": "string"
                 }
             }
@@ -600,6 +725,17 @@ const docTemplate = `{
                 },
                 "url": {
                     "type": "string"
+                }
+            }
+        },
+        "api.tagListResponse": {
+            "type": "object",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -818,6 +954,12 @@ const docTemplate = `{
                 "screenshot": {
                     "type": "string"
                 },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Tag"
+                    }
+                },
                 "technologies": {
                     "type": "array",
                     "items": {
@@ -889,6 +1031,17 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Tag": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
                 }
             }

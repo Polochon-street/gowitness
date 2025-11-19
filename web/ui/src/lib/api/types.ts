@@ -36,6 +36,7 @@ type galleryResult = {
   screenshot: string;
   failed: boolean;
   technologies: string[];
+  tags: tag[];
 };
 
 // list
@@ -124,6 +125,11 @@ interface cookie {
   source_port: number;
 }
 
+interface tag {
+  id: number;
+  name: string;
+}
+
 interface detail {
   id: number;
   url: string;
@@ -147,6 +153,7 @@ interface detail {
   network: networklog[];
   console: consolelog[];
   cookies: cookie[];
+  tags: tag[];
 }
 
 interface searchresult {
@@ -165,6 +172,10 @@ interface technologylist {
   technologies: string[];
 }
 
+interface taglist {
+  tags: string[];
+}
+
 export type {
   statistics,
   wappalyzer,
@@ -178,7 +189,9 @@ export type {
   networklog,
   consolelog,
   cookie,
+  tag,
   detail,
   searchresult,
   technologylist,
+  taglist,
 };

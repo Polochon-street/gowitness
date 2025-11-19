@@ -1,4 +1,4 @@
-import { gallery, list, statistics, wappalyzer, detail, searchresult, technologylist } from "@/lib/api/types";
+import { gallery, list, statistics, wappalyzer, detail, searchresult, technologylist, taglist } from "@/lib/api/types";
 
 const endpoints = {
   // api base path
@@ -41,6 +41,10 @@ const endpoints = {
     path: `/results/technology`,
     returnas: {} as technologylist
   },
+  tags: {
+    path: `/results/tags`,
+    returnas: {} as taglist
+  },
 
   // post endpoints
   search: {
@@ -58,6 +62,14 @@ const endpoints = {
   submitsingle: {
     path: `/submit/single`,
     returnas: {} as detail
+  },
+  tagadd: {
+    path: `/results/tag/add`,
+    returnas: "" as string
+  },
+  tagremove: {
+    path: `/results/tag/remove`,
+    returnas: "" as string
   }
 };
 

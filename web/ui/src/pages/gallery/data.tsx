@@ -4,20 +4,23 @@ import { toast } from "@/hooks/use-toast";
 
 const getWappalyzerData = async (
   setWappalyzer: React.Dispatch<React.SetStateAction<apitypes.wappalyzer | undefined>>,
-  setTechnology: React.Dispatch<React.SetStateAction<apitypes.technologylist | undefined>>
+  setTechnology: React.Dispatch<React.SetStateAction<apitypes.technologylist | undefined>>,
+  setTagList: React.Dispatch<React.SetStateAction<apitypes.taglist | undefined>>
 ) => {
   try {
-    const [wappalyzerData, technologyData] = await Promise.all([
+    const [wappalyzerData, technologyData, tagData] = await Promise.all([
       await api.get('wappalyzer'),
-      await api.get('technology')
+      await api.get('technology'),
+      await api.get('tags')
     ]);
     setWappalyzer(wappalyzerData);
     setTechnology(technologyData);
+    setTagList(tagData);
   } catch (err) {
     toast({
       title: "API Error",
       variant: "destructive",
-      description: `Failed to get wappalyzer / technology data: ${err}`
+      description: `Failed to get wappalyzer / technology / tag data: ${err}`
     });
   }
 };
@@ -29,6 +32,7 @@ const getData = async (
   page: number,
   limit: number,
   technologyFilter: string,
+  tagFilter: string,
   statusFilter: string,
   perceptionGroup: boolean,
   showFailed: boolean,
@@ -39,6 +43,7 @@ const getData = async (
       page,
       limit,
       technologies: technologyFilter,
+      tags: tagFilter,
       status: statusFilter,
       perception: perceptionGroup ? 'true' : 'false',
       failed: showFailed ? 'true' : 'false',
