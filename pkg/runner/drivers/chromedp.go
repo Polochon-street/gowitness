@@ -19,7 +19,6 @@ import (
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
-	"github.com/chromedp/cdproto/storage"
 	targetproto "github.com/chromedp/cdproto/target"
 	"github.com/chromedp/chromedp"
 	"github.com/sensepost/gowitness/internal/islazy"
@@ -316,17 +315,22 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 				if run.options.Scan.SaveContent {
 					go func(index int) {
 						c := chromedp.FromContext(navigationCtx)
+						if c == nil || c.Target == nil {
+							return
+						}
 						p := network.GetResponseBody(e.RequestID)
 						body, err := p.Do(cdp.WithExecutor(navigationCtx, c.Target))
 						if err != nil {
 							if run.options.Logging.LogScanErrors {
 								run.log.Error("could not get network request response body", "url", e.Response.URL, "err", err)
-								return
 							}
+							return
 						}
 
 						resultMutex.Lock()
-						result.Network[index].Content = body
+						if index < len(result.Network) {
+							result.Network[index].Content = body
+						}
 						resultMutex.Unlock()
 
 					}(entryIndex)
@@ -410,7 +414,9 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 
 	tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
 		var err error
-		cookies, err = storage.GetCookies().Do(ctx)
+		// Use network.GetCookies with the target URL to only get cookies
+		// relevant to this page, not all cookies from the shared browser
+		cookies, err = network.GetCookies().WithURLs([]string{target}).Do(ctx)
 		if err != nil && run.options.Logging.LogScanErrors {
 			logger.Error("could not get cookies", "err", err)
 		}

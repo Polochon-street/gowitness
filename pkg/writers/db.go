@@ -50,7 +50,95 @@ func (dw *DbWriter) Write(result *models.Result) error {
 		log.Debug("could not get group id for perception hash", "hash", result.PerceptionHash)
 	}
 
-	return dw.conn.Create(result).Error
+	// Extract associations before creating the result
+	cookies := result.Cookies
+	headers := result.Headers
+	networkLogs := result.Network
+	consoleLogs := result.Console
+	technologies := result.Technologies
+	tls := result.TLS
+	tags := result.Tags
+
+	// Clear associations to insert the main result first
+	result.Cookies = nil
+	result.Headers = nil
+	result.Network = nil
+	result.Console = nil
+	result.Technologies = nil
+	result.Tags = nil
+
+	// Create the main result record first
+	if err := dw.conn.Create(result).Error; err != nil {
+		return err
+	}
+
+	// Batch size to avoid "too many SQL variables" error
+	// SQLite has a default limit of 999 variables
+	batchSize := 100
+
+	// Insert associations in batches
+	if len(cookies) > 0 {
+		// Set ResultID for all cookies
+		for i := range cookies {
+			cookies[i].ResultID = result.ID
+		}
+		if err := dw.conn.CreateInBatches(cookies, batchSize).Error; err != nil {
+			return err
+		}
+	}
+
+	if len(headers) > 0 {
+		for i := range headers {
+			headers[i].ResultID = result.ID
+		}
+		if err := dw.conn.CreateInBatches(headers, batchSize).Error; err != nil {
+			return err
+		}
+	}
+
+	if len(networkLogs) > 0 {
+		for i := range networkLogs {
+			networkLogs[i].ResultID = result.ID
+		}
+		if err := dw.conn.CreateInBatches(networkLogs, batchSize).Error; err != nil {
+			return err
+		}
+	}
+
+	if len(consoleLogs) > 0 {
+		for i := range consoleLogs {
+			consoleLogs[i].ResultID = result.ID
+		}
+		if err := dw.conn.CreateInBatches(consoleLogs, batchSize).Error; err != nil {
+			return err
+		}
+	}
+
+	if len(technologies) > 0 {
+		for i := range technologies {
+			technologies[i].ResultID = result.ID
+		}
+		if err := dw.conn.CreateInBatches(technologies, batchSize).Error; err != nil {
+			return err
+		}
+	}
+
+	// Handle TLS (single record, not a slice)
+	if tls.ID != 0 || tls.Protocol != "" {
+		tls.ResultID = result.ID
+		if err := dw.conn.Create(&tls).Error; err != nil {
+			return err
+		}
+	}
+
+	// Handle Tags (many-to-many relationship)
+	if len(tags) > 0 {
+		if err := dw.conn.Model(result).Association("Tags").Append(tags); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // AssignGroupID assigns a PerceptionHashGroupId based on Hamming distance

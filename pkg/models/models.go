@@ -144,6 +144,8 @@ type Tag struct {
 // ResultTag is the join table for the many-to-many relationship between Results and Tags
 // The composite primary key (ResultID, TagID) ensures a URL can't have the same tag twice
 type ResultTag struct {
-	ResultID uint `json:"result_id" gorm:"primaryKey"`
-	TagID    uint `json:"tag_id" gorm:"primaryKey"`
+	ResultID uint   `json:"result_id" gorm:"primaryKey"`
+	TagID    uint   `json:"tag_id" gorm:"primaryKey"`
+	Result   Result `gorm:"constraint:OnDelete:CASCADE"`
+	Tag      Tag    `gorm:"constraint:OnDelete:CASCADE"`
 }
