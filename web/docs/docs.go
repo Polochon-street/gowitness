@@ -144,6 +144,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "A comma seperated list of tags to leave out the results of.",
+                        "name": "exclude_tags",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "A comma seperated list of HTTP status codes to filter by.",
                         "name": "status",
                         "in": "query"

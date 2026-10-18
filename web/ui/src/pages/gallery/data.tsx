@@ -36,6 +36,7 @@ const getData = async (
   statusFilter: string,
   perceptionGroup: boolean,
   showFailed: boolean,
+  hideChecked: boolean,
 ) => {
   setLoading(true);
   try {
@@ -47,6 +48,7 @@ const getData = async (
       status: statusFilter,
       perception: perceptionGroup ? 'true' : 'false',
       failed: showFailed ? 'true' : 'false',
+      exclude_tags: hideChecked ? 'checked' : '',
     });
     setGallery(s.results);
     setTotalPages(Math.ceil(s.total_count / limit));

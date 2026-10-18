@@ -476,6 +476,10 @@ paths:
         in: query
         name: tags
         type: string
+      - description: A comma seperated list of tags to leave out the results of.
+        in: query
+        name: exclude_tags
+        type: string
       - description: A comma seperated list of HTTP status codes to filter by.
         in: query
         name: status

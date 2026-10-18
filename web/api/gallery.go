@@ -9,6 +9,7 @@ import (
 
 	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/models"
+	"gorm.io/gorm"
 )
 
 type galleryResponse struct {
@@ -42,6 +43,7 @@ type galleryContent struct {
 //	@Param			limit			query		int		false	"Number of results per page."
 //	@Param			technologies	query		string	false	"A comma seperated list of technologies to filter by."
 //	@Param			tags			query		string	false	"A comma seperated list of tags to filter by."
+//	@Param			exclude_tags	query		string	false	"A comma seperated list of tags to leave out the results of."
 //	@Param			status			query		string	false	"A comma seperated list of HTTP status codes to filter by."
 //	@Param			perception		query		boolean	false	"Order the results by perception hash."
 //	@Param			failed			query		boolean	false	"Include failed screenshots in the results."
@@ -100,6 +102,13 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 		tags = append(tags, strings.Split(tagFilterValue, ",")...)
 	}
 
+	// tag exclusion
+	var excludeTags []string
+	excludeTagValue := r.URL.Query().Get("exclude_tags")
+	if excludeTagValue != "" {
+		excludeTags = append(excludeTags, strings.Split(excludeTagValue, ",")...)
+	}
+
 	// failed result filtering
 	var showFailed bool
 	showFailed, err = strconv.ParseBool(r.URL.Query().Get("failed"))
@@ -109,12 +118,7 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 
 	// query the db
 	var queryResults []*models.Result
-	query := h.DB.Model(&models.Result{}).Limit(results.Limit).
-		Offset(offset).Preload("Technologies").Preload("Tags")
-
-	if perceptionSort {
-		query.Order("perception_hash_group_id DESC")
-	}
+	query := h.DB.Model(&models.Result{})
 
 	if len(statusCodes) > 0 {
 		query.Where("response_code IN ?", statusCodes)
@@ -133,8 +137,28 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 			Where("tags.name IN (?)", tags))
 	}
 
+	if len(excludeTags) > 0 {
+		query.Where("id not in (?)", h.DB.Table("result_tags").
+			Select("result_id").Distinct("result_id").
+			Joins("JOIN tags ON tags.id = result_tags.tag_id").
+			Where("tags.name IN (?)", excludeTags))
+	}
+
 	if !showFailed {
 		query.Where("failed = ?", showFailed)
+	}
+
+	// count the filtered results, for the pagination. the session leaves
+	// query as it is for the page itself
+	if err := query.Session(&gorm.Session{}).Count(&results.TotalCount).Error; err != nil {
+		log.Error("could not count total results", "err", err)
+		return
+	}
+
+	query.Limit(results.Limit).Offset(offset).Preload("Technologies").Preload("Tags")
+
+	if perceptionSort {
+		query.Order("perception_hash_group_id DESC")
 	}
 
 	// run the query
@@ -163,11 +187,6 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 			Technologies: technologies,
 			Tags:         result.Tags,
 		})
-	}
-
-	if err := h.DB.Model(&models.Result{}).Count(&results.TotalCount).Error; err != nil {
-		log.Error("could not count total results", "err", err)
-		return
 	}
 
 	jsonData, err := json.Marshal(results)

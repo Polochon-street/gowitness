@@ -21,7 +21,10 @@ import { getIconUrl, getStatusColor } from "@/lib/common";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { FavoriteToggle } from "@/components/favorite-toggle";
+import { CheckedToggle } from "@/components/checked-toggle";
 
+// tags set by the recon pipeline on the urls that are worth a look again
+const highlightedTags = ["new", "changed"];
 
 const GalleryPage = () => {
   const [gallery, setGallery] = useState<apitypes.galleryResult[]>();
@@ -42,6 +45,7 @@ const GalleryPage = () => {
   // toggles
   const perceptionGroup = searchParams.get("perception") === "true";
   const showFailed = searchParams.get("failed") !== "false"; // Default to true
+  const hideChecked = searchParams.get("hidechecked") === "true";
 
   useEffect(() => {
     getWappalyzerData(setWappalyzer, setTechnology, setTagList);
@@ -50,9 +54,9 @@ const GalleryPage = () => {
   useEffect(() => {
     getData(
       setLoading, setGallery, setTotalPages,
-      page, limit, technologyFilter, tagFilter, statusFilter, perceptionGroup, showFailed
+      page, limit, technologyFilter, tagFilter, statusFilter, perceptionGroup, showFailed, hideChecked
     );
-  }, [page, limit, perceptionGroup, statusFilter, technologyFilter, tagFilter, showFailed]);
+  }, [page, limit, perceptionGroup, statusFilter, technologyFilter, tagFilter, showFailed, hideChecked]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -152,6 +156,14 @@ const GalleryPage = () => {
     });
   };
 
+  const handleToggleHideChecked = () => {
+    setSearchParams(prev => {
+      prev.set("hidechecked", (!hideChecked).toString());
+      return prev;
+    });
+    handlePageChange(1); // back to page 1
+  };
+
   const sortedTechnologies = useMemo(() => {
     if (!technology) return [];
     const selectedTechnologies = technologyFilter.split(',').filter(Boolean);
@@ -215,14 +227,24 @@ const GalleryPage = () => {
                 className="w-full h-48 object-cover transition-all duration-300 filter group-hover:scale-105"
               />
             )}
-            <div className="absolute top-2 left-2">
+            <div className="absolute top-2 left-2 flex flex-col gap-2">
               <FavoriteToggle
                 resultId={screenshot.id}
                 tags={screenshot.tags || []}
                 className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
               />
+              <CheckedToggle
+                resultId={screenshot.id}
+                tags={screenshot.tags || []}
+                className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
+              />
             </div>
-            <div className="absolute top-2 right-2">
+            <div className="absolute top-2 right-2 flex gap-1">
+              {screenshot.tags?.filter(tag => highlightedTags.includes(tag.name)).map(tag => (
+                <Badge key={tag.id} variant="secondary">
+                  {tag.name}
+                </Badge>
+              ))}
               <Badge variant="default" className={`${getStatusColor(screenshot.response_code)}`}>
                 {screenshot.response_code}
               </Badge>
@@ -415,6 +437,16 @@ const GalleryPage = () => {
             />
             <Label htmlFor="show-failed" className="text-sm">
               Show Failed
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2 p-2">
+            <Switch
+              id="hide-checked"
+              checked={hideChecked}
+              onCheckedChange={handleToggleHideChecked}
+            />
+            <Label htmlFor="hide-checked" className="text-sm">
+              Hide Checked
             </Label>
           </div>
         </div>

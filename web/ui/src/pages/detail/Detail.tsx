@@ -16,6 +16,8 @@ import * as api from "@/lib/api/api";
 import * as apitypes from "@/lib/api/types";
 import { getData } from './data';
 import { FavoriteToggle } from '@/components/favorite-toggle';
+import { CheckedToggle } from '@/components/checked-toggle';
+import { TagInput } from '@/components/tag-input';
 
 
 const ScreenshotDetailPage = () => {
@@ -120,6 +122,10 @@ const ScreenshotDetailPage = () => {
         </div>
         <div className="flex space-x-2">
           <FavoriteToggle
+            resultId={detail.id}
+            tags={detail.tags || []}
+          />
+          <CheckedToggle
             resultId={detail.id}
             tags={detail.tags || []}
           />
@@ -295,6 +301,30 @@ const ScreenshotDetailPage = () => {
           ) : (
             <p className="text-muted-foreground">No technologies detected</p>
           )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const tagsCard = (detail: apitypes.detail) => {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Tags</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TagInput
+            resultId={detail.id}
+            tags={detail.tags || []}
+            onTagsChange={async () => {
+              try {
+                const newDetail = await api.get('detail', { id: currentId });
+                setDetail(newDetail);
+              } catch (error) {
+                console.error("Failed to refresh detail:", error);
+              }
+            }}
+          />
         </CardContent>
       </Card>
     );
@@ -698,6 +728,7 @@ const ScreenshotDetailPage = () => {
         {/* Left Column */}
         <div className="w-full lg:w-2/5 space-y-4">
           {infoCard(detail)}
+          {tagsCard(detail)}
           {techCard(detail)}
           {tlsCard(detail)}
         </div>
